@@ -1,6 +1,9 @@
-import { Observable, Observer, Subscription, Subject } from 'rxjs';
+import { Observable } from 'rxjs/src/internal/Observable';
+import { Observer } from 'rxjs/src/internal/types';
+import { Subscription } from 'rxjs/src/internal/Subscription';
+import { Subject } from 'rxjs/src/internal/Subject';
+import { Function1 } from '@upradata/util';
 
-export type Function1Arg<T, R = void> = (arg: T) => R;
 
 export class ObservableSubscribeOnce<T> {
     private subscription: Subscription;
@@ -14,22 +17,32 @@ export class ObservableSubscribeOnce<T> {
             this.observable = observableOrSubject;
     }
 
-    resubscribe(observerOrNext: Observer<T> | Function1Arg<T>, error?: Function1Arg<any>, complete?: () => void) {
+    private subscribe(observerOrNext: Observer<T> | Function1<T>, error?: Function1<any>, complete?: () => void) {
+        const obs = this.observable || this.subject;
+
+        this.subscription = obs.subscribe(typeof observerOrNext === 'function' ? {
+            next: observerOrNext,
+            error,
+            complete
+        } : observerOrNext);
+    }
+
+    resubscribe(observerOrNext: Observer<T> | Function1<T>, error?: Function1<any>, complete?: () => void) {
         const obs = this.observable || this.subject;
 
         if (obs === undefined)
             return;
 
         this.unsubscribe();
-        this.subscription = obs.subscribe(observerOrNext as any, error, complete);
+        this.subscribe(observerOrNext, error, complete);
     }
 
-    subscribeOnce(observerOrNext: Observer<T> | Function1Arg<T>, error?: Function1Arg<any>, complete?: () => void) {
+    subscribeOnce(observerOrNext: Observer<T> | Function1<T>, error?: Function1<any>, complete?: () => void) {
         const obs = this.observable || this.subject;
 
         if (obs !== undefined) {
             if (this.subscription === undefined)
-                this.subscription = obs.subscribe(observerOrNext as any, error, complete);
+                this.subscribe(observerOrNext, error, complete);
         }
     }
 
