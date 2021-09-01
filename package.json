@@ -32,11 +32,9 @@
         "npm-publish": "npm run build && npm publish --access public"
     },
     "devDependencies": {
-        "@types/fs-extra": "^9.0.12",
         "@types/jest": "^27.0.1",
         "@types/node": "^16.7.10",
         "concurrently": "^6.2.1",
-        "fs-extra": "^10.0.0",
         "jest": "^27.1.0",
         "shx": "^0.3.3",
         "ts-jest": "^27.0.5",
