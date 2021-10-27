@@ -25,5 +25,15 @@
             "src/@types",
             "node_modules/@types"
         ]
-    }
+    },
+    "include": [
+        "src"
+        /* "node_modules/rxjs/src/internal" */
+    ],
+    "exclude": [
+        "node_modules",
+        /* "!node_modules/rxjs/src/internal", */
+        "src/**/*.example.ts",
+        "src/**/*.spec.ts"
+    ]
 }

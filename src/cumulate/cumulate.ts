@@ -1,8 +1,12 @@
-import { Observable } from 'rxjs/src/internal/Observable';
-import { OperatorFunction } from 'rxjs/src/internal/types';
 import { operate } from 'rxjs/src/internal/util/lift';
 import { noop } from 'rxjs/src/internal/util/noop';
 import { OperatorSubscriber } from 'rxjs/src/internal/operators/OperatorSubscriber';
+/*
+import { Observable } from 'rxjs/src/internal/Observable';
+import { OperatorFunction } from 'rxjs/src/internal/types';
+ */
+import { Observable, OperatorFunction } from 'rxjs';
+
 
 // Inspiried by rxjs/node_modules/.pnpm/rxjs@7.2.0/node_modules/rxjs/src/internal/operators/buffer.ts
 
@@ -47,11 +51,11 @@ export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ?
  * ```ts
  * import { fromEvent, interval } from 'rxjs';
  * import { buffer } from 'rxjs/operators';
- * 
+ *
  * export const cumulateUnique = <T, O extends CumulateOpts<T>>(closingNotifier: Observable<any>, options?: O) => {
  *   return cumulate(closingNotifier, Set, options);
  * };
- * 
+ *
  * const clicks = fromEvent(document, 'click');
  * const intervalEvents = interval(1000);
  * const cumulateSet = intervalEvents.pipe(tap(t => t % 4), cumulateUnique(clicks, { toArray: true }));
@@ -70,7 +74,13 @@ export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ?
  * of values.
  */
 
-export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observable<any>, cumulator: CumulatorCtor<T> | Cumulator<T>, options?: O): OperatorFunction<T, Return<T, O>> => {
+export type CumulateReturn<T, O extends CumulateOpts<T>> = OperatorFunction<T, Return<T, O>>;
+
+export const cumulate = <T, O extends CumulateOpts<T>>(
+    closingNotifier: Observable<any>,
+    cumulator: CumulatorCtor<T> | Cumulator<T>,
+    options?: O
+): CumulateReturn<T, O> => {
 
     const newCumulator = () => {
         if (cumulator instanceof Cumulator) {
@@ -78,6 +88,7 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
             return cumulator;
         }
 
+        // eslint-disable-next-line new-cap
         return new cumulator();
     };
 
@@ -100,7 +111,7 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
 
         // Subscribe to our source.
         source.subscribe(
-            new OperatorSubscriber(
+            new OperatorSubscriber<T>(
                 subscriber,
                 value => kumulator.add(value),
                 () => {
@@ -130,5 +141,5 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
             // Ensure buffered values are released on teardown.
             kumulator = null;
         };
-    });
+    }) as any as CumulateReturn<T, O>;
 };
