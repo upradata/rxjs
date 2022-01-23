@@ -8,7 +8,7 @@ import { OperatorFunction } from 'rxjs/src/internal/types';
 import { Observable, OperatorFunction } from 'rxjs';
 
 
-// Inspiried by rxjs/node_modules/.pnpm/rxjs@7.2.0/node_modules/rxjs/src/internal/operators/buffer.ts
+// Inspiried by node_modules/rxjs/src/internal/operators/buffer.ts
 
 
 export abstract class Cumulator<T> {
@@ -28,7 +28,6 @@ export class CumulateOptions<T> {
 
 export type CumulateOpts<T> = Partial<CumulateOptions<T>>;
 
-export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ? T[] : Cumulator<T>;
 
 
 /**
@@ -74,13 +73,33 @@ export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ?
  * of values.
  */
 
-export type CumulateReturn<T, O extends CumulateOpts<T>> = OperatorFunction<T, Return<T, O>>;
+type CumulatorType<T> = CumulatorCtor<T> | Cumulator<T>;
+type CumulatorInstance<C extends CumulatorType<any>> = C extends CumulatorCtor<any> ? InstanceType<C> : C;
 
-export const cumulate = <T, O extends CumulateOpts<T>>(
+export type Return<T, C extends CumulatorType<T>, O extends CumulateOpts<T>> = [ O ] extends [ never ] ? CumulatorInstance<C> :
+    O[ 'toArray' ] extends true ?
+    T[] :
+    CumulatorInstance<C>;
+
+export type CumulateReturn<T, C extends CumulatorType<T>, O extends CumulateOpts<any>> = OperatorFunction<T, Return<T, C, O>>;
+
+/* 
+source.pipe(
+    cumulate(sourceFromAMouseClickForInstance),
+    filter(v => v.length > 0),
+).subscribe(res => console.log(res);
+*/
+
+// T is the the type from the source Observable we pipe
+// T = source type, for instance { a: number }
+// OperatorFunction<T, R> ==> is the return of the pipe
+// if the cumulator C is Set<{ a:number; someValue: string; }>
+// so R = Set<{ a:number; someValue: string; }> as cumulate returns OperatorFunction<{ a: number }, Set<{ a:number; someValue: string; }>>
+export const cumulate = <T, C extends CumulatorType<T>, O extends CumulateOpts<T>>(
     closingNotifier: Observable<any>,
-    cumulator: CumulatorCtor<T> | Cumulator<T>,
+    cumulator: C,
     options?: O
-): CumulateReturn<T, O> => {
+): CumulateReturn<T, C, O> => {
 
     const newCumulator = () => {
         if (cumulator instanceof Cumulator) {
@@ -89,13 +108,13 @@ export const cumulate = <T, O extends CumulateOpts<T>>(
         }
 
         // eslint-disable-next-line new-cap
-        return new cumulator();
+        return new (cumulator as CumulatorCtor<T>)();
     };
 
-    const getResult = (buffer: Cumulator<T>): T[] | Cumulator<T> => {
+    const getResult = (buffer: Cumulator<T>) => {
         if (options?.toArray) {
             if (buffer[ Symbol.iterator ])
-                return [ ...buffer[ Symbol.iterator ]() ] as T[];
+                return [ ...buffer[ Symbol.iterator ]() ];
 
             return buffer.toArray();
         }
@@ -115,7 +134,7 @@ export const cumulate = <T, O extends CumulateOpts<T>>(
                 subscriber,
                 value => kumulator.add(value),
                 () => {
-                    subscriber.next(getResult(kumulator) as Return<T, O>);
+                    subscriber.next(getResult(kumulator));
                     subscriber.complete();
                 }
             )
@@ -126,12 +145,12 @@ export const cumulate = <T, O extends CumulateOpts<T>>(
             new OperatorSubscriber(
                 subscriber,
                 () => {
-                    // Start a new kumulator and emit the previous one.
-
+                    // emits the kumulator
                     const result = getResult(kumulator);
-                    kumulator.clear();
+                    subscriber.next(result);
 
-                    subscriber.next(result as Return<T, O>);
+                    // starts a new kumulator
+                    kumulator.clear();
                 },
                 noop
             )
@@ -141,5 +160,5 @@ export const cumulate = <T, O extends CumulateOpts<T>>(
             // Ensure buffered values are released on teardown.
             kumulator = null;
         };
-    }) as any as CumulateReturn<T, O>;
+    }) as any as CumulateReturn<T, C, O>;
 };
