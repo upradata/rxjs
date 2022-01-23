@@ -1,6 +1,6 @@
-import { operate } from 'rxjs/src/internal/util/lift';
-import { noop } from 'rxjs/src/internal/util/noop';
-import { OperatorSubscriber } from 'rxjs/src/internal/operators/OperatorSubscriber';
+import { operate } from '#rxjs-src/internal/util/lift';
+import { noop } from '#rxjs-src/internal/util/noop';
+import { OperatorSubscriber } from '#rxjs-src/internal/operators/OperatorSubscriber';
 /*
 import { Observable } from 'rxjs/src/internal/Observable';
 import { OperatorFunction } from 'rxjs/src/internal/types';
@@ -93,7 +93,7 @@ export const cumulate = <T, O extends CumulateOpts<T>>(
     };
 
     const getResult = (buffer: Cumulator<T>): T[] | Cumulator<T> => {
-        if (options.toArray) {
+        if (options?.toArray) {
             if (buffer[ Symbol.iterator ])
                 return [ ...buffer[ Symbol.iterator ]() ] as T[];
 

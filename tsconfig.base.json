@@ -17,9 +17,9 @@
         "traceResolution": false,
         "baseUrl": ".",
         "paths": {
-            "rxjs/*": [
-                "node_modules/rxjs/*",
-            ]
+            "#rxjs-src/*": [
+                "node_modules/rxjs/src/*",
+            ],
         },
         "typeRoots": [
             "src/@types",
