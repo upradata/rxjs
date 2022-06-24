@@ -8,7 +8,7 @@
         "experimentalDecorators": true,
         "lib": [
             "ESNext",
-            "DOM"
+            "DOM",
         ],
         "skipLibCheck": true,
         "moduleResolution": "node",
@@ -17,13 +17,24 @@
         "traceResolution": false,
         "baseUrl": ".",
         "paths": {
-            "rxjs/*": [
-                "node_modules/rxjs/*",
-            ]
+            "#rxjs-src/*": [
+                "node_modules/rxjs/src/*",
+            ],
         },
         "typeRoots": [
             "src/@types",
             "node_modules/@types"
         ]
-    }
+    },
+    "include": [
+        "src"
+        /* "node_modules/rxjs/src/internal" */
+    ],
+    "exclude": [
+        "node_modules",
+        // "node_modules/rxjs",
+        /* "!node_modules/rxjs/src/internal", */
+        "src/**/*.example.ts",
+        "src/**/*.spec.ts"
+    ]
 }

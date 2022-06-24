@@ -1,10 +1,14 @@
+import { operate } from '#rxjs-src/internal/util/lift';
+import { noop } from '#rxjs-src/internal/util/noop';
+import { OperatorSubscriber } from '#rxjs-src/internal/operators/OperatorSubscriber';
+/*
 import { Observable } from 'rxjs/src/internal/Observable';
 import { OperatorFunction } from 'rxjs/src/internal/types';
-import { operate } from 'rxjs/src/internal/util/lift';
-import { noop } from 'rxjs/src/internal/util/noop';
-import { OperatorSubscriber } from 'rxjs/src/internal/operators/OperatorSubscriber';
+ */
+import { Observable, OperatorFunction } from 'rxjs';
 
-// Inspiried by rxjs/node_modules/.pnpm/rxjs@7.2.0/node_modules/rxjs/src/internal/operators/buffer.ts
+
+// Inspiried by node_modules/rxjs/src/internal/operators/buffer.ts
 
 
 export abstract class Cumulator<T> {
@@ -24,7 +28,6 @@ export class CumulateOptions<T> {
 
 export type CumulateOpts<T> = Partial<CumulateOptions<T>>;
 
-export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ? T[] : Cumulator<T>;
 
 
 /**
@@ -47,20 +50,20 @@ export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ?
  * ```ts
  * import { fromEvent, interval } from 'rxjs';
  * import { buffer } from 'rxjs/operators';
- * 
+ *
  * export const cumulateUnique = <T, O extends CumulateOpts<T>>(closingNotifier: Observable<any>, options?: O) => {
  *   return cumulate(closingNotifier, Set, options);
  * };
- * 
+ *
  * const clicks = fromEvent(document, 'click');
  * const intervalEvents = interval(1000);
  * const cumulateSet = intervalEvents.pipe(tap(t => t % 4), cumulateUnique(clicks, { toArray: true }));
  * cumulateSet.subscribe(x => console.log(x)); => [0, 1, 2, 3] (if we wait at least 4s, otherwise [0, 1] for 2s for instance)
  * ```
  *
- * @see {@link cumulateUnique}
- * @see {@link lastValue}
- * @see {@link bufferToggle}
+ * // @see {@link cumulateUnique}
+ * // @see {@link lastValue}
+ * // @see {@link bufferToggle}
  *
  * @param {Observable<any>} closingNotifier An Observable that signals the
  * buffer to be emitted on the output Observable.
@@ -70,7 +73,33 @@ export type Return<T, O extends CumulateOpts<T>> = O[ 'toArray' ] extends true ?
  * of values.
  */
 
-export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observable<any>, cumulator: CumulatorCtor<T> | Cumulator<T>, options?: O): OperatorFunction<T, Return<T, O>> => {
+type CumulatorType<T> = CumulatorCtor<T> | Cumulator<T>;
+type CumulatorInstance<C extends CumulatorType<any>> = C extends CumulatorCtor<any> ? InstanceType<C> : C;
+
+export type Return<T, C extends CumulatorType<T>, O extends CumulateOpts<T>> = [ O ] extends [ never ] ? CumulatorInstance<C> :
+    O[ 'toArray' ] extends true ?
+    T[] :
+    CumulatorInstance<C>;
+
+export type CumulateReturn<T, C extends CumulatorType<T>, O extends CumulateOpts<any>> = OperatorFunction<T, Return<T, C, O>>;
+
+/*
+source.pipe(
+    cumulate(sourceFromAMouseClickForInstance),
+    filter(v => v.length > 0),
+).subscribe(res => console.log(res);
+*/
+
+// T is the the type from the source Observable we pipe
+// T = source type, for instance { a: number }
+// OperatorFunction<T, R> ==> is the return of the pipe
+// if the cumulator C is Set<{ a:number; someValue: string; }>
+// so R = Set<{ a:number; someValue: string; }> as cumulate returns OperatorFunction<{ a: number }, Set<{ a:number; someValue: string; }>>
+export const cumulate = <T, C extends CumulatorType<T>, O extends CumulateOpts<T>>(
+    closingNotifier: Observable<any>,
+    cumulator: C,
+    options?: O
+): CumulateReturn<T, C, O> => {
 
     const newCumulator = () => {
         if (cumulator instanceof Cumulator) {
@@ -78,13 +107,14 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
             return cumulator;
         }
 
-        return new cumulator();
+        // eslint-disable-next-line new-cap
+        return new (cumulator as CumulatorCtor<T>)();
     };
 
-    const getResult = (buffer: Cumulator<T>): T[] | Cumulator<T> => {
-        if (options.toArray) {
+    const getResult = (buffer: Cumulator<T>) => {
+        if (options?.toArray) {
             if (buffer[ Symbol.iterator ])
-                return [ ...buffer[ Symbol.iterator ]() ] as T[];
+                return [ ...buffer[ Symbol.iterator ]() ];
 
             return buffer.toArray();
         }
@@ -100,11 +130,11 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
 
         // Subscribe to our source.
         source.subscribe(
-            new OperatorSubscriber(
+            new OperatorSubscriber<T>(
                 subscriber,
                 value => kumulator.add(value),
                 () => {
-                    subscriber.next(getResult(kumulator) as Return<T, O>);
+                    subscriber.next(getResult(kumulator));
                     subscriber.complete();
                 }
             )
@@ -115,12 +145,12 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
             new OperatorSubscriber(
                 subscriber,
                 () => {
-                    // Start a new kumulator and emit the previous one.
-
+                    // emits the kumulator
                     const result = getResult(kumulator);
-                    kumulator.clear();
+                    subscriber.next(result);
 
-                    subscriber.next(result as Return<T, O>);
+                    // starts a new kumulator
+                    kumulator.clear();
                 },
                 noop
             )
@@ -130,5 +160,5 @@ export const cumulate = <T, O extends CumulateOpts<T>>(closingNotifier: Observab
             // Ensure buffered values are released on teardown.
             kumulator = null;
         };
-    });
+    }) as any as CumulateReturn<T, C, O>;
 };

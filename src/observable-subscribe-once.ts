@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs/src/internal/Observable';
-import { Observer } from 'rxjs/src/internal/types';
-import { Subscription } from 'rxjs/src/internal/Subscription';
-import { Subject } from 'rxjs/src/internal/Subject';
+import { Observable } from '#rxjs-src/internal/Observable';
+import { Observer } from '#rxjs-src/internal/types';
+import { Subscription } from '#rxjs-src/internal/Subscription';
+import { Subject } from '#rxjs-src/internal/Subject';
 import { Function1 } from '@upradata/util';
 
 
