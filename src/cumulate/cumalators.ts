@@ -6,7 +6,7 @@ export function cumulateUnique<T, O extends CumulateOpts<T> = never>(closingNoti
     return cumulate(closingNotifier, Set, options);
 }
 
-type AA = CumulateReturn<string, SetCons<string>, never>;
+// type AA = CumulateReturn<string, SetCons<string>, never>;
 
 class LastValue<T> extends Cumulator<T>{
     public value: T;

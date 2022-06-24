@@ -8,7 +8,7 @@
         "experimentalDecorators": true,
         "lib": [
             "ESNext",
-            "DOM"
+            "DOM",
         ],
         "skipLibCheck": true,
         "moduleResolution": "node",
@@ -32,6 +32,7 @@
     ],
     "exclude": [
         "node_modules",
+        // "node_modules/rxjs",
         /* "!node_modules/rxjs/src/internal", */
         "src/**/*.example.ts",
         "src/**/*.spec.ts"

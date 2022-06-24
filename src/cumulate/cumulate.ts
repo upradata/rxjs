@@ -61,9 +61,9 @@ export type CumulateOpts<T> = Partial<CumulateOptions<T>>;
  * cumulateSet.subscribe(x => console.log(x)); => [0, 1, 2, 3] (if we wait at least 4s, otherwise [0, 1] for 2s for instance)
  * ```
  *
- * @see {@link cumulateUnique}
- * @see {@link lastValue}
- * @see {@link bufferToggle}
+ * // @see {@link cumulateUnique}
+ * // @see {@link lastValue}
+ * // @see {@link bufferToggle}
  *
  * @param {Observable<any>} closingNotifier An Observable that signals the
  * buffer to be emitted on the output Observable.
@@ -83,7 +83,7 @@ export type Return<T, C extends CumulatorType<T>, O extends CumulateOpts<T>> = [
 
 export type CumulateReturn<T, C extends CumulatorType<T>, O extends CumulateOpts<any>> = OperatorFunction<T, Return<T, C, O>>;
 
-/* 
+/*
 source.pipe(
     cumulate(sourceFromAMouseClickForInstance),
     filter(v => v.length > 0),

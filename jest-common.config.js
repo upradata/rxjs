@@ -1,17 +1,17 @@
 module.exports = {
     globals: {
-        "ts-jest": {
+        'ts-jest': {
             diagnostics: false
         }
     },
     transform: {
-        "^.+\\.tsx?$": "ts-jest"
+        '^.+\\.tsx?$': 'ts-jest'
     },
     moduleFileExtensions: [
-        "ts",
-        "tsx",
-        "js",
-        "json"
+        'ts',
+        'tsx',
+        'js',
+        'json'
     ],
-    testEnvironment: "./jest-custom-environment"
+    testEnvironment: './jest-custom-environment'
 };
