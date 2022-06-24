@@ -9,7 +9,7 @@
         "url": "https://github.com/upradata/rxjs.git"
     },
     "license": "MIT",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Set of rxjs utilities",
     "sideEffects": false,
     "main": "lib",
